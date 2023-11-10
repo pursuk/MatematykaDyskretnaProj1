@@ -1,9 +1,9 @@
 def substract(x1,x2):
     """
 
-    :param a: zbiór początkowy
-    :param b: zbiór odejmowany
-    :return: różnica zbiorów A-B
+    :param x1: zbiór początkowy
+    :param x2: zbiór odejmowany
+    :return result: różnica zbiorów A-B
     """
     result = x1.copy()
     for x in x1:
@@ -13,8 +13,9 @@ def substract(x1,x2):
 
 
 
-def gen_podzbiorow(base_set,A=[]):
+def gen_podzbiorow(n,A=[]):
     subsets = []
+    base_set = [*range(1,n+1)]
     dziala = True
     while dziala:
         try:
@@ -24,14 +25,14 @@ def gen_podzbiorow(base_set,A=[]):
         A.append(a)
         # filtrowanie elementów większych niż a
         A = [x for x in A if x<=a]
-        subsets.append(A)
+        A.sort()
+        subsets.append(A.copy())
     return subsets
 
 
 
 if __name__ == '__main__':
-    dupa = [1,2,3,4,5,6,7]
     zupa = [1,2,3,5]
-    subsets = gen_podzbiorow(dupa, zupa)
+    subsets = gen_podzbiorow(7, zupa)
     for item in subsets:
         print(item)
