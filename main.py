@@ -1,4 +1,4 @@
-import math,csv
+import math,csv, statistics
 def gen_podzbiorow(n, k=10, A=None):
     if A is None:
         A = set()
@@ -147,12 +147,44 @@ def find_best_match(players, mapped_matches):
 
 def filter_best_match_players(best_match, matches):
     best_match_player_ids = [x[0] for x in best_match[0]]
+    filtered_list = []
     for match in matches:
         player_ids = [x[0] for x in match]
-        if any(i in player_ids for i in best_match_player_ids):
+        if not any(id in set(player_ids) for id in best_match_player_ids):
             # print("removing match:")
             # print(match)
-            matches.remove(match)
+            filtered_list.append(match)
+    return filtered_list
+
+
+def gen_teams(players):
+    remapped_players = []
+    for i, player in enumerate(players):
+        player = (i+1, player[1], player[2])
+        remapped_players.append(player)
+    teams = kelem_podzbior(len(players),0,2)
+    teams_with_players = []
+    for team in teams:
+        players_in_team = []
+        for player_id in list(team):
+            players_in_team.append(players[player_id-1])
+        teams_with_players.append(players_in_team)
+    return teams_with_players
+
+
+
+def find_best_teams(teams,players):
+    match_skill_avg = get_skill_average(players)
+    best_skill_delta = 999
+    for team in teams:
+        team_skill_avg = statistics.mean([int(player[2]) for player in team])
+        skill_delta = abs(team_skill_avg-match_skill_avg)
+        if skill_delta < best_skill_delta:
+            team1 = team
+            best_skill_delta = skill_delta
+    team2 = list(set(players)-set(team1))
+    return team1,team2
+
 
 
 if __name__ == '__main__':
@@ -160,12 +192,18 @@ if __name__ == '__main__':
     mapped_matches = gen_matches(players)
     final_match_list = []
     while len(mapped_matches) != 0:
-        print(len(mapped_matches))
         best_match = find_best_match(players, mapped_matches)
-        filter_best_match_players(best_match, mapped_matches)
+        mapped_matches = filter_best_match_players(best_match, mapped_matches)
         final_match_list.append(best_match)
-    for ads in final_match_list:
-        print(ads)
+
+    for match in final_match_list:
+        players = match[0]
+        teams = gen_teams(players)
+        team1, team2 = find_best_teams(teams, players)
+        print("__________________________________________\nMECZ")
+        print(team1)
+        print('vs')
+        print(team2)
 
 
 
