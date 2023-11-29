@@ -1,7 +1,8 @@
-def gen_podzbiorow(n, A=None):
+import math,csv
+def gen_podzbiorow(n, k=10, A=None):
     if A is None:
-        A = {}
-    subsets = []
+        A = set()
+    subsets = [A.copy()]
     base_set = {*range(1, n + 1)}
     while len(A)!=n:
         a = max(base_set - A)
@@ -9,12 +10,23 @@ def gen_podzbiorow(n, A=None):
         # filtrowanie elementów większych niż a
         A = {x for x in A if x<=a}
         subsets.append(A.copy())
+        if len(subsets) > k-1:
+            break
     return subsets
 
 def kelem_podzbior(n,p,k):
-    subsets = []
+    """
+
+    :param n: największy element zbioru głównego
+    :param p: ilość generowanych podzbiorów, 0 oznacza wszystkie
+    :param k: ilość elementów w podzbiorze
+    :return:
+    """
+    if p == 0:
+        p = math.comb(n,k)
     main_set = {*range(1, n + 1)}
     subset = {*range(1, k + 1)}
+    subsets = [subset.copy()]
     for o in range(p-1):
         a_min = min({x+1 for x in subset} - subset)
         LU = {x if x != a_min else x+1 for x in subset}
@@ -24,6 +36,7 @@ def kelem_podzbior(n,p,k):
         subset = L | {a_min} | U
         subsets.append(subset.copy())
     return subsets
+
 
 
 def permutacje(n, p, X = None):
@@ -70,13 +83,9 @@ def permutacje(n, p, X = None):
     return permutations
 
 
-
-
-
-
-if __name__ == '__main__':
+def zadanie1():
     start_set = {1, 2, 3, 5}
-    subsets = gen_podzbiorow(7, start_set)
+    subsets = gen_podzbiorow(7,10, start_set)
     for item in sorted(subsets, key=len):
         print(item)
     print('\n___________________________________________________')
@@ -92,6 +101,71 @@ if __name__ == '__main__':
     X = [4, 5, 6, 3, 2, 1]
     for item in permutacje(n,p,X):
         print(item)
+
+
+def load_players(file):
+    players = []
+    with open(file, newline='') as csvfile:
+        player_reader = csv.reader(csvfile)
+        for i,row in enumerate(player_reader):
+            players.append((i+1, row[0], row[1]))
+    return players
+
+def gen_matches(players):
+    matches = kelem_podzbior(len(players),0,4)
+    matches_with_players = []
+    for match in matches:
+        players_in_match = []
+        for player_id in list(match):
+            players_in_match.append(players[player_id-1])
+        matches_with_players.append(players_in_match)
+    return matches_with_players
+
+
+def get_skill_average(players):
+    skill_sum = 0
+    for player in players:
+        skill_sum = skill_sum + int(player[2])
+    avg = skill_sum/len(players)
+    return avg
+
+def find_best_match(players, mapped_matches):
+    skill_avg = get_skill_average(players)
+    # print(skill_avg)
+    best_skill_delta = 999
+    best_match = 'nie ma, zesralo sie'
+    for match in mapped_matches:
+        match_skill_avg = get_skill_average(match)
+        # print(match_skill_avg)
+        skill_delta = abs(skill_avg-match_skill_avg)
+        match = (match, round(skill_delta, 2))
+        if skill_delta < best_skill_delta:
+            best_match = match
+            best_skill_delta = skill_delta
+    return best_match
+
+
+def filter_best_match_players(best_match, matches):
+    best_match_player_ids = [x[0] for x in best_match[0]]
+    for match in matches:
+        player_ids = [x[0] for x in match]
+        if any(i in player_ids for i in best_match_player_ids):
+            # print("removing match:")
+            # print(match)
+            matches.remove(match)
+
+
+if __name__ == '__main__':
+    players = load_players('./data.csv')
+    mapped_matches = gen_matches(players)
+    final_match_list = []
+    while len(mapped_matches) != 0:
+        print(len(mapped_matches))
+        best_match = find_best_match(players, mapped_matches)
+        filter_best_match_players(best_match, mapped_matches)
+        final_match_list.append(best_match)
+    for ads in final_match_list:
+        print(ads)
 
 
 
